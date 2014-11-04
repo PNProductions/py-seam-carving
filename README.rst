@@ -1,10 +1,10 @@
-.. image:: https://travis-ci.org/PNProductions/py-seam-merging.svg?branch=master
-    :target: https://travis-ci.org/PNProductions/py-seam-merging
+.. image:: https://travis-ci.org/PNProductions/py-seam-carving.svg?branch=master
+    :target: https://travis-ci.org/PNProductions/py-seam-carving
 
-Python Seam Crving
+Python Seam Carving
 ===================
 
-This is a Python implementation of `Seam carving algorithm`_ method.
+This is a Python implementation of `Seam carving algorithm`_ method both for images and for videos using graph cut algorithm
 
 Requirements
 ------------

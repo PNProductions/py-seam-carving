@@ -1,6 +1,5 @@
 from image_helper import image_open, local_path
-from seamcarving import seam_merging, progress_bar
-from tvd import TotalVariationDenoising
+from seamcarving import seam_carving
 import cv2
 from numpy import size, float64, array, abs
 import time
@@ -19,7 +18,7 @@ file_suffix = '_small'
 
 folder_name = 'results'
 
-X = image_open(local_path('../assets/seam_merging' + file_suffix + '.bmp'))
+X = image_open(local_path('../assets/seam_carving' + file_suffix + '.bmp'))
 
 
 deleteNumberW = -size(X, 1) / 2
@@ -28,16 +27,15 @@ deleteNumberH = 0
 y = cv2.cvtColor(X, cv2.COLOR_BGR2YCR_CB)
 y = y.astype(float64)
 
-structureImage = TotalVariationDenoising(y[:, :, 0], iterTV).generate()
-
 importance = y
 kernel = array([[0, 0, 0],
-                   [1, 0, -1],
-                   [0, 0, 0]
-                   ])
+                [1, 0, -1],
+                [0, 0, 0]
+                ])
 importance = abs(cv2.filter2D(y[:, :, 0], -1, kernel, borderType=cv2.BORDER_REPLICATE)) + abs(cv2.filter2D(y[:, :, 0], -1, kernel.T, borderType=cv2.BORDER_REPLICATE))
 
-img = seam_merging(X, structureImage, importance, deleteNumberW, alpha, betaEn, False)
+img = seam_carving(X, importance, deleteNumberW, alpha, betaEn, False)
+
 size = '_reduce' if deleteNumberW < 0 else '_enlarge'
 size += str(-deleteNumberW) if deleteNumberW < 0 else str(deleteNumberW)
 name = 'result_mod_' + size + '_' + str(int(time.time()))

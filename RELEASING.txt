@@ -1,5 +1,5 @@
 ==================
-Releasing py-seam-merging
+Releasing py-seam-carving
 ==================
 
 :Author: Piero Dotti, Paolo Guglielmini
@@ -7,7 +7,7 @@ Releasing py-seam-merging
 :Date: 2014-11-02
 
 
-Following are notes useful for releasing py-seam-merging.
+Following are notes useful for releasing py-seam-carving.
 
 Preliminaries
 -------------
@@ -61,7 +61,7 @@ Uploading
 Post-release actions
 --------------------
 
-- Edit ``seammerging/version.py`` to add the patch-level
+- Edit ``seamcarving/version.py`` to add the patch-level
   revision (i.e. X.Y --> X.Y.1).  Set the `release` variable to False.
 
 - Create new headers for adding new features in ``RELEASE_NOTES.txt``

@@ -5,3 +5,6 @@
 *.pyc
 *.c
 build/
+dist/
+*.egg-info
+examples/results/

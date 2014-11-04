@@ -5,6 +5,7 @@ from random import random
 import numexpr as ne
 from seamcarving.native import improvedSumShifted
 import maxflow
+import cv2
 from seamcarving.utils import cli_progress_bar, cli_progress_bar_end
 
 
@@ -16,9 +17,8 @@ class seam_carving_decomposition(object):
   # deleteNumberW  : Number of columns to be deleted
   # deleteNumberH  : Number of rows to be deleted
   #
-  def __init__(self, X, S, T, deleteNumberW, deleteNumberH, alpha, beta, use_integers=True):
+  def __init__(self, X, T, deleteNumberW, deleteNumberH, alpha, beta, use_integers=True):
     self.X = X
-    self.S = S
     self.T = T / max(max(T))
     self.deleteNumberW = deleteNumberW
     self.deleteNumberH = deleteNumberH
@@ -77,28 +77,23 @@ class seam_carving_decomposition(object):
     links = zeros((I.shape[0], I.shape[1], 4))
 
     # SU
-    #links[:, 1:-1, 0] = np.abs(I[:, 0:-2] - ((I[:, 1:-1] + I[:, 2:]) * 0.5)) / 255 * self.alpha
-    pastleft = I[:, 1:] - I[:, 0:-1]
-    futureleft = ((I[:, 1:-1] + I[:, 2:]) * 0.5) - I[:, 0:-2]
-
-    pastright = -pastleft # I[:, 0:-1] - I[:, 1:] = IO - sx
-    futureright = ((I[:, 0:-2] + I[:, 1:-1]) * 0.5) - I[:, 2:]
-
-    left = (pastleft[:, 0:-1] - futureleft) ** 2
-    right = (pastright[:, 0:-1] - futureright) ** 2
-
-    links[:, 1:-2, 0] = (left[:, 0:-1] + right[:, 1:]) / 510 * self.alpha
-    links = links * i_mult
-    links[:, 0:-1, 0] = links[:, 0:-1, 0] + Imp + ite
+    # LR I(i,j+1)- I(i,j-1) (SU)
+    links[:, 1:-1, 0] = np.abs(I[:, 2:] - I[:, 0:-2])
 
     links[:, -2, 0] = i_inf
     links[:, 0, 0] = i_inf
-    # DESTRA
-    # links[0:-1, 0:-1, 1] = np.abs(I[1:, 0:-1] - ((I[0:-1, 0:-1] + I[0:-1, 1:]) * 0.5)) / 255 * self.alpha
-    # SINISTRA
-    # links[1:, 0:-1, 2] = np.abs(I[0:-1, 0:-1] - ((I[1:, 0:-1] + I[1:, 1:]) * 0.5)) / 255 * self.alpha
-    #GIU
+
+    # -LU I(i+1,j)- I(i,j-1) (DESTRA)
+    links[0:-1, 1:, 1] = np.abs(I[1:, 1:] - I[0:-1, 0:-1])
+
+    # LU (SINISTRA)
+    # I(i-1,j)-I(i,j-1)
+    links[1:, 1:, 2] = np.abs(I[0:-1, 1:] - I[1:, 0:-1])
+
+    # GIU
     links[:, :, 3] = i_inf
+
+    links = links * i_mult
 
     structure = np.array([[i_inf, 0, 0],
                           [i_inf, 0, 0],
@@ -159,7 +154,7 @@ class seam_carving_decomposition(object):
   # * Deletion: For each row, deletes a value according to I.
   # * Merge/substitution: For each row, it replaces the actual value of the seam with it's look-forwarded version, according to I
   # The only exception is Z, that is not precomputed and should be calculated in real time.
-  def applySeamMerging(self, I, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z):
+  def apply_seam_carving(self, I, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z):
     reduced_size_1, reduced_size_2 = size(Simg, 0), size(Simg, 1) - 1
 
     ## Deletion:
@@ -176,22 +171,6 @@ class seam_carving_decomposition(object):
     p12Copy = p12[mask].reshape(reduced_size_1, reduced_size_2, p12.shape[2])
     p22Copy = p22[mask].reshape(reduced_size_1, reduced_size_2, p22.shape[2])
     ZCopy = Z[mask].reshape(reduced_size_1, reduced_size_2, Z.shape[2])
-
-    ## Merge:
-    # I is converted to an integer matrix, in order to be used as an index map.
-    # This can achieve a non-aligned multirow substitution very efficiently
-    # Every indexed value of the seam is replaced with it's look-forward version.
-    I = I.astype(np.uint32)
-    r = r_[0:size(I)]
-    q11Copy[r, I] = upQ11[r, I]
-    q12Copy[r, I] = upQ12[r, I]
-
-    p12Copy[r, I, :] = upP12[r, I]
-    p22Copy[r, I, :] = upP22[r, I]
-
-    SimgCopy[r, I] = v[r, I]
-    # Z lookforward version is not precomputed, so you have to do it in real time
-    ZCopy[r, I, :] = Z[r, I, :] + Z[r, I + 1, :]
 
     return q11Copy, q12Copy, p12Copy, p22Copy, SimgCopy, ZCopy
 
@@ -229,82 +208,16 @@ class seam_carving_decomposition(object):
       pix[ii] = pix[ii + 1] + pathMap[ii + 1, int(pix[ii + 1])] - 1
     return pix
 
-  def generateNorthEnergy(self, Simg, v, northA, northB, northC):
-    square = self.square
-    DD = self.initD(Simg)
-    DD[1:, :] = v[1:, :] - v[0:-1, :]  # Dovrebbe essere c_0(q, n)
-    CNcc = square(DD, northA, northB, northC)  # Dovrebbe essere ||c_k(q, n) - c_0(q, n)||^2
-
-    # Upper-left connection
-    DD = self.initD(Simg)
-    DD[1:, 1:] = v[1:, 1:] - Simg[0:-1, 2:]
-    CNcnCL = square(DD, northA, northB, northC)
-
-    # Upper-right connection
-    DD = self.initD(Simg)
-    DD[1:, 0:-1] = v[1:, 0:-1] - Simg[0:-1, 0:-2]
-    CNcnCR = square(DD, northA, northB, northC)
-    return CNcc, CNcnCL, CNcnCR
-
-  def generateSouthEnergy(self, Simg, v, southA, southB, southC):
-    square = self.square
-    # Lower connection
-    # CScc = || Structure_k+1 - Structure_k ||_2 in south direction
-    # Structure_k+1 = Skel(r) - Skel(r-1) # (r = pixel)
-    DD = self.initD(Simg)
-    DD[0:-1, :] = v[0:-1, :] - v[1:, :]
-    CScc = square(DD, southA, southB, southC)
-
-    # Lower-left connection
-    DD = self.initD(Simg)
-    DD[0:-1, 0:-1] = v[0:-1, 0:-1] - Simg[1:, 0:-2]
-    CScnCL = square(DD, southA, southB, southC)
-
-    # Lower-right connection
-    DD = self.initD(Simg)
-    DD[0:-1, 1:] = v[0:-1, 1:] - Simg[1:, 2:]
-    CScnCR = square(DD, southA, southB, southC)
-
-    return CScc, CScnCL, CScnCR
-
-  def generateEastEnergy(self, Simg, v, eastA, eastB, eastC):
-    DD = self.initD(Simg)
-    DD[:, 0:-1] = v[:, 0:-1] - Simg[:, 2:]
-    return self.square(DD, eastA, eastB, eastC)
-
-  def generateWestEnergy(self, Simg, v, westA, westB, westC):
-    DD = self.initD(Simg)
-    DD[:, 1:] = v[:, 1:] - Simg[:, 0:-2]
-    return self.square(DD, westA, westB, westC)
-
-  def generateEnergyUpLeftRight(self, CScc, CNcc, CScnCL, CNcnCL, CScnCR, CNcnCR):
-    CU = zeros(CScc.shape)
-    # Qui non è niente di che: CS e CN sono disallineate, perché sono una rispetto al nord e una rispetto al sud
-    # e devo riallinearle per poterle sommare correttamente.
-    CU[1:, :] = CScc[0:-1, :] + CNcc[1:, :]
-
-    CL = zeros(CScc.shape)
-    CL[1:, 1:] = CScnCL[0:-1, 0:-1] + CNcnCL[1:, 1:]
-
-    CR = zeros(CScc.shape)
-    CR[1:, 0:-1] = CScnCR[0:-1, 1:] + CNcnCR[1:, 0:-1]
-    return CU, CL, CR
-
   def divide(self, a, b):
     return ne.evaluate('- a / b')
-
-  def square(self, DD, a, b, c):
-    return ne.evaluate('a * (DD ** 2) + 2 * b * DD + c')
-
-  def calculatePot(self, CW, CE, alphaN, imp, gammaN, ite, betaN):
-    return ne.evaluate('(CW + CE) * alphaN + imp * gammaN + betaN * ite')
 
   def sumShifted(self, a):
     return a[:, 0:-1] + a[:, 1:]
 
   def generate(self):
     sumShifted = self.sumShifted
-    X, S, T = self.X, self.S, self.T
+    X, T = self.X, self.T
+    S = cv2.cvtColor(X, cv2.COLOR_BGR2GRAY).astype(np.float64)
 
     # Precomputed sizes
     s_X_1, s_X_2, s_X_3 = size(X, 0), size(X, 1), size(X, 2)
@@ -433,9 +346,8 @@ class seam_carving_decomposition(object):
 
       # pix = self.generateSeamPath(Pot, pathMap)
 
-      q11, q12, p12, p22, Simg, Z = self.applySeamMerging(pix.transpose()[0], q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z)
+      q11, q12, p12, p22, Simg, Z = self.apply_seam_carving(pix.transpose()[0], q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z)
 
     cli_progress_bar_end()
     img = Z[:, :, ZIindex]
-    img = img / Z[:, :, [ZUindex, ZUindex, ZUindex]]  # ???
     return img

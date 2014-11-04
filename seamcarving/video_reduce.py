@@ -252,7 +252,7 @@ class video_seam_carving_decomposition(object):
   # * Deletion: For each row, deletes a value according to I.
   # * Merge/substitution: For each row, it replaces the actual value of the seam with it's look-forwarded version, according to I
   # The only exception is Z, that is not precomputed and should be calculated in real time.
-  def applySeamMerging(self, I, mask, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z):
+  def apply_seam_carving(self, I, mask, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z):
     reduced_size_1, reduced_size_2, reduced_size_3 = size(Simg, 0), size(Simg, 1), size(Simg, 2) - 1
 
     ## Deletion:
@@ -508,7 +508,7 @@ class video_seam_carving_decomposition(object):
 
       mask = self.makeEdge(pathMap)
 
-      q11, q12, p12, p22, Simg, Z = self.applySeamMerging(I, mask, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z)
+      q11, q12, p12, p22, Simg, Z = self.apply_seam_carving(I, mask, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z)
 
     cli_progress_bar_end()
     img = Z[:, :, :, ZIindex]

@@ -2,7 +2,7 @@ import unittest
 from numpy import array, r_, zeros
 import scipy.io
 from numpy.testing import assert_array_equal
-from seammerging.enlargement import SeamMergingWithDecompositionEnlargement
+from seammerging.enlargement import seam_carving_decomposition_enlargement
 
 X = zeros((5, 5, 3))
 X[:, :, 0] = array([r_[1:6], r_[6:11], r_[11:16], r_[16: 21], r_[21:26]])
@@ -10,14 +10,14 @@ X[:, :, 1] = X[:, :, 0] * 2
 X[:, :, 2] = X[:, :, 0] * 3
 S = X[:, :, 0] + 25
 T = X[:, :, 0] + 50
-subject = SeamMergingWithDecompositionEnlargement(X, S, T, 2, 0, 0.5, 0.5)
+subject = seam_carving_decomposition_enlargement(X, S, T, 2, 0, 0.5, 0.5)
 
 
-class SeamMergingWithDecompositionTest(unittest.TestCase):
-  def test_applySeamMerging(self):
-    p = scipy.io.loadmat('./tests/mats/enlarge/applySeamMergingEnlarg.mat')
+class seam_carving_decompositionTest(unittest.TestCase):
+  def test_apply_seam_carving(self):
+    p = scipy.io.loadmat('./tests/mats/enlarge/apply_seam_carvingEnlarg.mat')
     I = p['I'].T[0] - 1
-    q11, q12, p12, p22, Simg, Z = subject.apply_seam_merging(I, p['q11'], p['upQ11'], p['q12'], p['upQ12'], p['p12'], p['upP12'], p['p22'], p['upP22'], p['Simg'], p['v'], p['Z'])
+    q11, q12, p12, p22, Simg, Z = subject.apply_seam_carving(I, p['q11'], p['upQ11'], p['q12'], p['upQ12'], p['p12'], p['upP12'], p['p22'], p['upP22'], p['Simg'], p['v'], p['Z'])
     assert_array_equal(q11, p['q11Copy'])
     assert_array_equal(q12, p['q12Copy'])
     assert_array_equal(p22, p['p22Copy'])

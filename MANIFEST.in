@@ -1,5 +1,5 @@
 include MANIFEST.in
 
-recursive-include seammerging *.py *pyx
+recursive-include seamcarving *.py *pyx
 include README.rst
 include requirements.txt

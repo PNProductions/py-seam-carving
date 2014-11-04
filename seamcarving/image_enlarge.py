@@ -23,7 +23,7 @@ class seam_carving_decomposition_enlargement(seam_carving_decomposition):
     bvals2 = np.take(B.reshape(-1, B.shape[-1]), mi2 + 1, axis=0)
     return np.insert(A.reshape(-1, A.shape[2]), mi + 1, bvals + bvals2, axis=0).reshape(A.shape[0], -1, A.shape[2])
 
-  def applySeamMerging(self, I, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z):
+  def apply_seam_carving(self, I, q11, upQ11, q12, upQ12, p12, upP12, p22, upP22, Simg, v, Z):
     I = I.astype(np.uint64)
 
     index_map = np.ravel_multi_index((xrange(q11.shape[0]), I), q11.shape) + 1
