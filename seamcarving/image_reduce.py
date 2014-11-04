@@ -2,7 +2,6 @@
 from numpy import concatenate, size, ones, zeros, amax, where, empty
 import numpy as np
 from random import random
-import numexpr as ne
 import maxflow
 import cv2
 from seamcarving.utils import cli_progress_bar, cli_progress_bar_end
@@ -34,7 +33,7 @@ class seam_carving_decomposition(object):
     else:
       return np.ravel_multi_index(index, image.shape)
 
-  def graph_cut(self, I):
+  def generate_graph(self, I):
     g = maxflow.Graph[float]()
     i_inf = np.inf
     i_mult = 1
@@ -97,7 +96,10 @@ class seam_carving_decomposition(object):
     right_most = concatenate((np.arange(I.shape[0]).reshape(1, I.shape[0]), ones((1, I.shape[0])) * (size(I, 1) - 1))).astype(np.uint64)
     right_most = np.ravel_multi_index(right_most, I.shape)
     g.add_grid_tedges(right_most, 0, i_inf)
+    return g, nodeids
 
+  def graph_cut(self, I):
+    g, nodeids = self.generate_graph(I)
     g.maxflow()
     I = g.get_grid_segments(nodeids)
     I = (I == False).sum(1) - 1
@@ -171,22 +173,10 @@ class seam_carving_decomposition(object):
       pix[ii] = pix[ii + 1] + pathMap[ii + 1, int(pix[ii + 1])] - 1
     return pix
 
-  def divide(self, a, b):
-    return ne.evaluate('- a / b')
-
-  def sumShifted(self, a):
-    return a[:, 0:-1] + a[:, 1:]
-
   def generate(self):
     X = self.X
     S = cv2.cvtColor(X, cv2.COLOR_BGR2GRAY).astype(np.float64)
 
-    # Precomputed sizes
-    s_X_1, s_X_2 = size(X, 0), size(X, 1)
-
-    # Z is a matrix that contains both the image S, the matrix T (Importance Map),
-    # and a matrix of ones. Each component looks like: [X_0, X_1, X_2, T_0, 1]
-    Z = concatenate((X, ones((s_X_1, s_X_2, 1))), axis=2)
     Z = np.copy(X)
 
     # Cloning S [To be fixed]

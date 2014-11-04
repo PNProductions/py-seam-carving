@@ -13,9 +13,7 @@ To run this code you need the following packages:
 
 -  Python `2.6`_ and `2.7`_
 -  `Numpy`_
--  `Cython`_
--  `numexpr`_
--  `OpenCV`_ (optional, only to run examples)
+-  `OpenCV`_
 -  `Scipy`_ (optional, only to tests)
 
 Maybe it should work also on other version of python, but it’s untested.
@@ -60,8 +58,6 @@ purposes.
 .. _2.6: https://www.python.org/download/releases/2.6/
 .. _2.7: https://www.python.org/download/releases/2.7/
 .. _Numpy: http://www.numpy.org/
-.. _Cython: https://github.com/pmneila/PyMaxflow
-.. _numexpr: https://github.com/pydata/numexpr
 .. _OpenCV: http://opencv.org/
 .. _Scipy: http://www.scipy.org/
 .. _unittest: https://docs.python.org/2/library/unittest.html
