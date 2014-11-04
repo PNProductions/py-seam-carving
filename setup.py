@@ -1,43 +1,21 @@
 #!/usr/bin/env python
 
+import sys
+import runpy
+
 __module_name__ = 'py-seam-carving'
+__version_str__ = runpy.run_path('seamcarving/version.py')['version']
+
+if sys.version_info < (2, 7):
+    raise RuntimeError('must use python 2.7 or greater')
 
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
-import runpy
-from distutils.extension import Extension
-import sys
-
-if sys.version_info < (2, 7):
-    raise RuntimeError('must use python 2.7 or greater')
-
-__version_str__ = runpy.run_path('seamcarving/version.py')['version']
-
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
-
-# Lazy evaluate extension definition, to allow correct requirements install
-class lazy_cythonize(list):
-    def __init__(self, callback):
-        self._list, self.callback = None, callback
-    def c_list(self):
-        if self._list is None: self._list = self.callback()
-        return self._list
-    def __iter__(self):
-        for e in self.c_list(): yield e
-    def __getitem__(self, ii): return self.c_list()[ii]
-    def __len__(self): return len(self.c_list())
-
-
-def extensions():
-    import numpy
-    from Cython.Build import cythonize
-    include_path = [numpy.get_include()]
-    ext = Extension('seamcarving.native', ['seamcarving/src/*.pyx'], include_dirs=include_path)
-    return cythonize([ext])
 
 setup(name=__module_name__,
       version=__version_str__,
@@ -47,7 +25,6 @@ setup(name=__module_name__,
       url='http://github.com/PnProductions/py-seam-carving',
       license='MIT',
       packages=['seamcarving'],
-      ext_modules=lazy_cythonize(extensions),
       install_requires=requirements,
       setup_requires=requirements
       )
