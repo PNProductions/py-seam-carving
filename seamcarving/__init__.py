@@ -8,15 +8,15 @@ def progress_bar(value):
   _utils.PROGRESS_BAR = value
 
 
-def seam_carving(image, structure, enlarge_by, alpha=0.3, beta=0.5, use_integers=True):
+def seam_carving(image, enlarge_by, use_integers=True):
   instance = None
   if image.ndim == 3:
     if enlarge_by > 0:
-      instance = seam_carving_decomposition_enlargement(image, structure, enlarge_by, 0, alpha, beta)
+      instance = seam_carving_decomposition_enlargement(image, enlarge_by, 0)
     else:
-      instance = seam_carving_decomposition(image, structure, -enlarge_by, 0, alpha, beta * 0, use_integers)
+      instance = seam_carving_decomposition(image, -enlarge_by, 0, use_integers)
   else:
-    instance = video_seam_carving_decomposition(image, structure, enlarge_by, 0, alpha, beta * 0, use_integers)
+    instance = video_seam_carving_decomposition(image, enlarge_by, 0, use_integers)
 
   return instance.generate()
 

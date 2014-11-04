@@ -1,5 +1,5 @@
 # coding=UTF-8
-from numpy import max, concatenate, size, ones, r_, zeros, inf, amax, where, shape, copy, append, empty
+from numpy import max, concatenate, size, ones, r_, zeros, amax, where, append, empty
 import numpy as np
 from random import random
 import numexpr as ne
@@ -7,6 +7,7 @@ import maxflow
 from seamcarving.utils import cli_progress_bar, cli_progress_bar_end
 
 DEBUG = True
+
 
 class video_seam_carving_decomposition(object):
   #
