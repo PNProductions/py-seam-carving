@@ -3,11 +3,12 @@ from os.path import basename, splitext
 import numpy as np
 import time
 import cv2
+import sys
 from seamcarving import seam_carving, progress_bar
 from video_helper import save_video_caps
 from image_helper import local_path
 
-progress_bar(False)
+progress_bar(True)
 
 
 def generate_step(I, img):
@@ -32,9 +33,14 @@ def print_seams(result, seams):
   return A
 
 deleteNumberW = 1
-counting_frames = 100
+counting_frames = 10
 filename = '../assets/car.m4v'
 suffix = ''
+for i in xrange(len(sys.argv) - 1):
+  if sys.argv[i] == '-s':
+    deleteNumberW = int(sys.argv[i + 1])
+  elif sys.argv[i] == '-f':
+    counting_frames = int(sys.argv[i + 1])
 
 makeNewDecData = False
 
