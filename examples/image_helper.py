@@ -1,6 +1,6 @@
 import cv2
 import os.path
-from numpy import clip, copy, float64
+from numpy import clip
 
 
 def local_path(path):
@@ -20,22 +20,17 @@ def image_open(filename, mode=None):
   else:
     raise IOError('Image file not found at: ' + filename)
 
+
+def image_save(image, name, path='./', extension='.bmp'):
+  cv2.imwrite(path + name + extension, image)
+
+
 def to_matlab_ycbcr(image):
   # http://stackoverflow.com/questions/26078281/why-luma-parameter-differs-in-opencv-and-matlab
-  return clip(16 + (219 / 255.0) * image, 16, 235)
+  return clip(16 + (219 / 255.0) * image, 0, 255)
 
 
 def from_matlab_ycbcr(image):
   # http://stackoverflow.com/questions/26078281/why-luma-parameter-differs-in-opencv-and-matlab
   # return clip(image * (255 / 219.0) - 16, 0, 255)
   return clip(image * (255 / 219.0) - 16, 0, 255)
-
-
-def get_matlab_luma(image):
-  image = image.astype(float64)
-  image = copy(image)
-  image[:, :, 2] = image[:, :, 2] * 0.114
-  image[:, :, 1] = image[:, :, 1] * 0.587
-  image[:, :, 0] = image[:, :, 0] * 0.299
-  image = image.sum(axis=2)
-  return image
