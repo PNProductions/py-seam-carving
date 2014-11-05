@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import sys
-import seamcarving.version
 
 __module_name__ = 'py-seam-carving'
-__version_str__ = seamcarving.version.version
+with open('./seamcarving/version.py') as f:
+  __version_str__ = f.read().split()[-1]
 
 if sys.version_info < (2, 6):
     raise RuntimeError('must use python 2.6 or greater')
