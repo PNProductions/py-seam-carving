@@ -12,6 +12,9 @@ before_install:
  - sudo apt-get install gfortran libopenblas-dev liblapack-dev
 # command to install dependencies
 install:
+ # Because of PyMaxflow
+ - pip install cython
+ - pip install numpy
  - pip install .
  # Testing requirements
  - pip install nose > /dev/null

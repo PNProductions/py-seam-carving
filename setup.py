@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 import sys
-import runpy
+import seamcarving.version
 
 __module_name__ = 'py-seam-carving'
-__version_str__ = runpy.run_path('seamcarving/version.py')['version']
+__version_str__ = seamcarving.version.version
 
-if sys.version_info < (2, 7):
-    raise RuntimeError('must use python 2.7 or greater')
+if sys.version_info < (2, 6):
+    raise RuntimeError('must use python 2.6 or greater')
 
 try:
     from setuptools import setup
