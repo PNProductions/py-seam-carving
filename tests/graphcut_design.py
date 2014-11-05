@@ -26,7 +26,7 @@ def plot_graph_3d(graph, nodes_shape, plot_terminal=True, plot_weights=True, fon
     if plot_weights:
         edge_labels = dict([((u, v,), d['weight'])
                      for u, v, d in nxg.edges(data=True)])
-        nx.draw_networkx_edge_labels(nxg, 
+        nx.draw_networkx_edge_labels(nxg,
                                      pos=positions,
                                      edge_labels=edge_labels,
                                      label_pos=0.3,
@@ -34,7 +34,9 @@ def plot_graph_3d(graph, nodes_shape, plot_terminal=True, plot_weights=True, fon
     plt.axis('equal')
     plt.show()
 
-Image = (np.ones((2, 5, 5)) * 3).astype(np.uint64)  # np.arange(50).reshape(2, 5, 5)
+# Image = (np.ones((2, 5, 5)) * 3).astype(np.uint64)  # np.arange(50).reshape(2, 5, 5)
+Image = np.arange(72).reshape(2, 6, 6)
+print Image
 
 subject = video_seam_carving_decomposition(Image, 0, 0, False)
 g, nodeids = subject.generate_graph(Image)

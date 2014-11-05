@@ -4,7 +4,6 @@ import numpy as np
 from random import random
 import maxflow
 from seamcarving.utils import cli_progress_bar, cli_progress_bar_end
-import cv2
 
 DEBUG = True
 
@@ -48,11 +47,12 @@ class video_seam_carving_decomposition(object):
     nodeids = g.add_grid_nodes(I.shape)
 
     # Left
-    structure = np.zeros((3, 3, 3))
-    structure[1, 1, 2] = 1
+    
 
     print I.shape
-    # Up
+    # From left to right
+    structure = np.zeros((3, 3, 3))
+    structure[1, 1, 2] = 1
     links = np.zeros(I.shape)
     links[:, :, 1:-1] = np.abs(I[:, :, 2:] - I[:, :, 0:-2])
     links = links * i_mult
@@ -60,27 +60,31 @@ class video_seam_carving_decomposition(object):
     links[:, :, 0] = i_inf
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
-    # Right
+    # from up to down
+    structure = np.zeros((3, 3, 3))
+    structure[1, 2, 1] = 1
     links = np.zeros(I.shape)
-    links[:, 0:-1, 1:] = np.abs(I[:, 1:, 1:] - I[:, 0:-1, 0:-1])
+    links[:, 0:-1, 1:] = np.abs(I[:, 0:-1, 1:] - I[:, 1:, 0:-1])
     links = links * i_mult
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
-    # Left
+    # from down to up
+    structure = np.zeros((3, 3, 3))
+    structure[1, 0, 1] = 1
     links = np.zeros(I.shape)
-    links[:, 1:, 1:] = np.abs(I[:, 0:-1, 1:] - I[:, 1:, 0:-1])
+    links[:, 1:, 1:] = np.abs(I[:, 1:, 1:] - I[:, 0:-1, 0:-1])
     links = links * i_mult
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
    # Diagonali su singola immagine
     structure = np.zeros((3, 3, 3))
     structure[1, :, 0] = i_inf
-    structure[0, 0, 1] = i_inf
-    structure[0, 2, 1] = i_inf
+    structure[2, 1, 0] = i_inf
+    structure[0, 1, 0] = i_inf
 
     g.add_grid_edges(nodeids, structure=structure)
 
-    # In profondità davanti
+    # Da dietro a avanti
     structure = np.zeros((3, 3, 3))
     structure[2, 1, 1] = 1
 
@@ -88,12 +92,12 @@ class video_seam_carving_decomposition(object):
     links = links * i_mult
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
-    # In profondità indietro
+    # Da davanti a indietro
     structure = np.zeros((3, 3, 3))
     structure[0, 1, 1] = 1
 
     links = np.zeros(I.shape)
-    links[1:, :, 0:-1] = np.abs(I[0:-1, :, 1:] - I[1:, :, 0:-1])
+    links[1:, :, 0:-1] = np.abs(I[0:-1, :, 0:-1] - I[1:, :, 1:])
     links = links * i_mult
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
@@ -136,7 +140,7 @@ class video_seam_carving_decomposition(object):
     ZCopy = Z[mask].reshape(reduced_size_1, reduced_size_2, reduced_size_3, Z.shape[3])
     return SimgCopy, ZCopy
 
-  ## Starting from the energy map and the path map, it generates vector pix, a vector that maps, for each row, the column of the seam to be merged.
+  # Starting from the energy map and the path map, it generates vector pix, a vector that maps, for each row, the column of the seam to be merged.
   # @Pot The energy map. The position of minimum value of the last row of Pot represents the starting pixel of the seam (with a bottom-up strategy)
   # @pathMap A matrix that maps, for each position, the best direction to be taken to find the lower energy seam.
   #

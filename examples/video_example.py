@@ -48,7 +48,7 @@ debug = False
 saveBMP = True
 
 cap = cv2.VideoCapture(local_path(filename))
-size = '_reduce' if deleteNumberW < 0 else '_enlarge'
+size = '_enlarge' if deleteNumberW < 0 else '_reduce'
 size += str(-deleteNumberW) if deleteNumberW < 0 else str(deleteNumberW)
 
 name = splitext(basename(filename))[0] + suffix + '_' + size + '_' + str(int(time.time()))
@@ -64,8 +64,6 @@ while cap.isOpened() and i < frames_count:
   ret, X = cap.read()
   if not ret:
     break
-  y = cv2.cvtColor(X, cv2.COLOR_BGR2YCR_CB)
-  y = y.astype(np.float64)
   video[i] = X
   i += 1
 
@@ -75,7 +73,7 @@ A = print_seams(video, seams)
 A = np.clip(A * 0.8 + video, 0, 255).astype(np.uint8)
 
 result = np.clip(result, 0, 255).astype(np.uint8)
-save_video_caps(result, 'results/' + name + '_')
-save_video_caps(A, 'results/' + name + '_seams_')
+save_video_caps(result, local_path('results/') + name + '_')
+save_video_caps(A, local_path('results/') + name + '_seams_')
 cap.release()
 print 'Finished file: ' + basename(filename)
