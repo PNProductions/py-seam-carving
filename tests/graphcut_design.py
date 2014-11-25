@@ -36,7 +36,6 @@ def plot_graph_3d(graph, nodes_shape, plot_terminal=True, plot_weights=True, fon
 
 # Image = (np.ones((2, 5, 5)) * 3).astype(np.uint64)  # np.arange(50).reshape(2, 5, 5)
 Image = np.arange(72).reshape(2, 6, 6)
-print Image
 
 subject = video_seam_carving_decomposition(Image, 0, 0, False)
 g, nodeids = subject.generate_graph(Image)

@@ -20,19 +20,47 @@ class video_seam_carving_decomposition(object):
     self.deleteNumberH = deleteNumberH
     self.use_integers = use_integers
 
-  def initD(self, Simg):
-    return zeros((size(Simg, 0), size(Simg, 1) - 1))
+  def generate_up_down_edges(self, I, nodeids, i_inf, i_mult):
+    structure = np.zeros((3, 3, 3))
+    structure[1, 2, 1] = 1
+    links = np.zeros(I.shape)
+    links[:, 0:-1, 1:] = np.abs(I[:, 0:-1, 1:] - I[:, 1:, 0:-1])
+    links = links * i_mult
+    return links, structure
 
-  def find_neighborhood(self, image, node):
-    index = np.unravel_index((node), image.shape)
-    unraveled = ((index[0] + 1, index[1] - 1), (index[0] + 1, index[1]), (index[0] + 1, index[1] + 1))
-    return unraveled
+  def generate_down_up_edges(self, I, nodeids, i_inf, i_mult):
+    structure = np.zeros((3, 3, 3))
+    structure[1, 0, 1] = 1
+    links = np.zeros(I.shape)
+    links[:, 1:, 1:] = np.abs(I[:, 1:, 1:] - I[:, 0:-1, 0:-1])
+    links = links * i_mult
+    return links, structure
 
-  def find_node(self, index, image):
-    if index[0] < 0 or index[0] >= image.shape[0] or index[1] >= image.shape[1] or index[1] < 0:
-      return None
-    else:
-      return np.ravel_multi_index(index, image.shape)
+  def generate_left_right_edges(self, I, nodeids, i_inf, i_mult):
+    structure = np.zeros((3, 3, 3))
+    structure[1, 1, 2] = 1
+    links = np.zeros(I.shape)
+    links[:, :, 1:-1] = np.abs(I[:, :, 2:] - I[:, :, 0:-2])
+    links = links * i_mult
+    links[:, :, -2] = i_inf
+    links[:, :, 0] = i_inf
+    return links, structure
+
+  def generate_backward_forward_edges(self, I, nodeids, i_inf, i_mult):
+    structure = np.zeros((3, 3, 3))
+    structure[2, 1, 1] = 1
+    links = np.zeros(I.shape)
+    links[0:-1, :, 1:] = np.abs(I[0:-1, :, 1:] - I[1:, :, 0:-1])
+    links = links * i_mult
+    return links, structure
+
+  def generate_forward_backward_edges(self, I, nodeids, i_inf, i_mult):
+    structure = np.zeros((3, 3, 3))
+    structure[0, 1, 1] = 1
+    links = np.zeros(I.shape)
+    links[1:, :, 0:-1] = np.abs(I[0:-1, :, 0:-1] - I[1:, :, 1:])
+    links = links * i_mult
+    return links, structure
 
   def generate_graph(self, I):
     g = maxflow.Graph[float]()
@@ -46,34 +74,11 @@ class video_seam_carving_decomposition(object):
 
     nodeids = g.add_grid_nodes(I.shape)
 
-    # Left
-    
-
-    print I.shape
-    # From left to right
-    structure = np.zeros((3, 3, 3))
-    structure[1, 1, 2] = 1
-    links = np.zeros(I.shape)
-    links[:, :, 1:-1] = np.abs(I[:, :, 2:] - I[:, :, 0:-2])
-    links = links * i_mult
-    links[:, :, -2] = i_inf
-    links[:, :, 0] = i_inf
+    links, structure = self.generate_left_right_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
-
-    # from up to down
-    structure = np.zeros((3, 3, 3))
-    structure[1, 2, 1] = 1
-    links = np.zeros(I.shape)
-    links[:, 0:-1, 1:] = np.abs(I[:, 0:-1, 1:] - I[:, 1:, 0:-1])
-    links = links * i_mult
+    self.generate_up_down_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
-
-    # from down to up
-    structure = np.zeros((3, 3, 3))
-    structure[1, 0, 1] = 1
-    links = np.zeros(I.shape)
-    links[:, 1:, 1:] = np.abs(I[:, 1:, 1:] - I[:, 0:-1, 0:-1])
-    links = links * i_mult
+    self.generate_down_up_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
    # Diagonali su singola immagine
@@ -81,24 +86,11 @@ class video_seam_carving_decomposition(object):
     structure[1, :, 0] = i_inf
     structure[2, 1, 0] = i_inf
     structure[0, 1, 0] = i_inf
-
     g.add_grid_edges(nodeids, structure=structure)
 
-    # Da dietro a avanti
-    structure = np.zeros((3, 3, 3))
-    structure[2, 1, 1] = 1
-
-    links[0:-1, :, 1:] = np.abs(I[0:-1, :, 1:] - I[1:, :, 0:-1])
-    links = links * i_mult
+    self.generate_backward_forward_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
-
-    # Da davanti a indietro
-    structure = np.zeros((3, 3, 3))
-    structure[0, 1, 1] = 1
-
-    links = np.zeros(I.shape)
-    links[1:, :, 0:-1] = np.abs(I[0:-1, :, 0:-1] - I[1:, :, 1:])
-    links = links * i_mult
+    self.generate_forward_backward_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
     g.add_grid_tedges(nodeids[:, :, 0], i_inf, 0)

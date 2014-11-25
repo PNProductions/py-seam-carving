@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+# Test script is used only for testing the algorithm with only one video, no batch. For batch videos see py-cloud-opencv.
 from os.path import basename, splitext
 import numpy as np
 import time
@@ -8,7 +10,7 @@ from seamcarving import seam_carving, progress_bar
 from video_helper import save_video_caps
 from image_helper import local_path
 
-progress_bar(True)
+progress_bar(False)
 
 
 def generate_step(I, img):
@@ -42,6 +44,8 @@ for i in xrange(len(sys.argv) - 1):
   elif sys.argv[i] == '-f':
     counting_frames = int(sys.argv[i + 1])
 
+# onlyfiles = glob.glob(path)
+
 makeNewDecData = False
 
 debug = False
@@ -54,7 +58,6 @@ size += str(-deleteNumberW) if deleteNumberW < 0 else str(deleteNumberW)
 name = splitext(basename(filename))[0] + suffix + '_' + size + '_' + str(int(time.time()))
 
 frames_count, fps, width, height = cap.get(cv2.cv.CV_CAP_PROP_FRAME_COUNT), cap.get(cv2.cv.CV_CAP_PROP_FPS), cap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH), cap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT)
-
 frames_count = frames_count if counting_frames is None else counting_frames
 
 video = np.empty((frames_count, height, width, 3))
