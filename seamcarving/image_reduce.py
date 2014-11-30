@@ -188,10 +188,7 @@ class seam_carving_decomposition(object):
       cli_progress_bar(i, num_seams)
       # pathmap is a matrix that, for each position, specifies the best direction
       # to be taken to minimize the cost.
-      # Pot, pathMap = self.dynamic_programming(Pot, CU, CL, CR, zeros(Pot.shape))
       pix = self.graph_cut(Simg)
-
-      # pix = self.generateSeamPath(Pot, pathMap)
 
       Simg, Z = self.apply_seam_carving(pix.transpose()[0], Simg, Z)
 
