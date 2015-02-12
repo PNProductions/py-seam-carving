@@ -1,7 +1,6 @@
 # coding=UTF-8
-from numpy import concatenate, size, ones, zeros, amax, where, empty
+from numpy import concatenate, size, ones, zeros
 import numpy as np
-from random import random
 import maxflow
 import cv2
 from seamcarving.utils import cli_progress_bar, cli_progress_bar_end
@@ -18,6 +17,7 @@ class seam_carving_decomposition(object):
     self.deleteNumberW = deleteNumberW
     self.deleteNumberH = deleteNumberH
     self.use_integers = use_integers
+    self.seams = np.empty((abs(deleteNumberW), X.shape[0]))
 
   def initD(self, Simg):
     return zeros((size(Simg, 0), size(Simg, 1) - 1))
@@ -150,28 +150,28 @@ class seam_carving_decomposition(object):
   # pix = [3, 4, 5, 5, 4, 5]
   # That maps this list of coordinates:
   # (0, 3), (1, 4), (2, 5), (3, 5), (4, 5), (5, 5)
-  def generateSeamPath(self, Pot, pathMap):
-    s_Pot_1 = Pot.shape[0]
+  # def generateSeamPath(self, Pot, pathMap):
+  #   s_Pot_1 = Pot.shape[0]
 
-    pix = empty((s_Pot_1, 1))
-    Pot_last_line = Pot[-1, :]
+  #   pix = empty((s_Pot_1, 1))
+  #   Pot_last_line = Pot[-1, :]
 
-    # mn, pix[-1] = Pot_last_line.min(axis=0), Pot_last_line.argmin(axis=0)
-    # Finding the minimum value from Pot's last line's values.
-    mn = Pot_last_line.min(axis=0)
+  #   # mn, pix[-1] = Pot_last_line.min(axis=0), Pot_last_line.argmin(axis=0)
+  #   # Finding the minimum value from Pot's last line's values.
+  #   mn = Pot_last_line.min(axis=0)
 
-    # Searching the list of indexes that have the minimum energy
-    pp = where(Pot_last_line == mn)[0]
+  #   # Searching the list of indexes that have the minimum energy
+  #   pp = where(Pot_last_line == mn)[0]
 
-    # If there's more than one, it's random choosen
-    pix[-1] = pp[int(random() * amax(pp.shape))]
-    # Starting from the bottom
-    for ii in reversed(xrange(0, s_Pot_1 - 1)):  # xrange(s_Pot_1 - 2, -1, -1):
-      # Directions expressed in pathMap uses this rule: 0 => upper-left, 1 => upper, 2 => upper-right
-      # They are remapped to be like that: -1 => upper-left, 0 => upper, 1 => upper-right
-      # To calculate the coordinate at step ii, you should map with: coordinate(ii + 1) + remapped direction
-      pix[ii] = pix[ii + 1] + pathMap[ii + 1, int(pix[ii + 1])] - 1
-    return pix
+  #   # If there's more than one, it's random choosen
+  #   pix[-1] = pp[int(random() * amax(pp.shape))]
+  #   # Starting from the bottom
+  #   for ii in reversed(xrange(0, s_Pot_1 - 1)):  # xrange(s_Pot_1 - 2, -1, -1):
+  #     # Directions expressed in pathMap uses this rule: 0 => upper-left, 1 => upper, 2 => upper-right
+  #     # They are remapped to be like that: -1 => upper-left, 0 => upper, 1 => upper-right
+  #     # To calculate the coordinate at step ii, you should map with: coordinate(ii + 1) + remapped direction
+  #     pix[ii] = pix[ii + 1] + pathMap[ii + 1, int(pix[ii + 1])] - 1
+  #   return pix
 
   def generate(self):
     X = self.X
@@ -190,7 +190,9 @@ class seam_carving_decomposition(object):
       # to be taken to minimize the cost.
       pix = self.graph_cut(Simg)
 
-      Simg, Z = self.apply_seam_carving(pix.transpose()[0], Simg, Z)
+      I = pix.transpose()[0]
+      self.seams[i] = I
+      Simg, Z = self.apply_seam_carving(I, Simg, Z)
 
     cli_progress_bar_end()
     return Z

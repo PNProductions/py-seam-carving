@@ -18,7 +18,8 @@ def seam_carving(image, enlarge_by, use_integers=True):
   else:
     instance = video_seam_carving_decomposition(image, enlarge_by, 0, use_integers)
 
-  return instance.generate()
+  result = instance.generate()
+  return result, instance.seams
 
 import version
 import os

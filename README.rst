@@ -28,9 +28,7 @@ To install everything just run:
 
 .. code:: shell
 
-    python setup.py install
-
-Maybe you have to run it with ``sudo``.
+    [sudo] python setup.py install
 
 Testing
 -------
