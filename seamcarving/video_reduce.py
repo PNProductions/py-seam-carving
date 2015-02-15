@@ -1,5 +1,5 @@
 # coding=UTF-8
-from numpy import size, zeros, amax, where, empty
+from numpy import size, amax, where, empty
 import numpy as np
 from random import random
 import maxflow
@@ -76,9 +76,9 @@ class video_seam_carving_decomposition(object):
 
     links, structure = self.generate_left_right_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
-    self.generate_up_down_edges(I, nodeids, i_inf, i_mult)
+    links, structure = self.generate_up_down_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
-    self.generate_down_up_edges(I, nodeids, i_inf, i_mult)
+    links, structure = self.generate_down_up_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
    # Diagonali su singola immagine
@@ -88,9 +88,9 @@ class video_seam_carving_decomposition(object):
     structure[0, 1, 0] = i_inf
     g.add_grid_edges(nodeids, structure=structure)
 
-    self.generate_backward_forward_edges(I, nodeids, i_inf, i_mult)
+    links, structure = self.generate_backward_forward_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
-    self.generate_forward_backward_edges(I, nodeids, i_inf, i_mult)
+    links, structure = self.generate_forward_backward_edges(I, nodeids, i_inf, i_mult)
     g.add_grid_edges(nodeids, structure=structure, weights=links, symmetric=False)
 
     g.add_grid_tedges(nodeids[:, :, 0], i_inf, 0)
@@ -167,7 +167,6 @@ class video_seam_carving_decomposition(object):
     return pix
 
   def makeEdge(self, A):
-    print A.shape
     X = np.ones_like(A)
     X[:, :, 0:-1] = A[:, :, 1:]
     return np.invert(A ^ X)
@@ -186,7 +185,7 @@ class video_seam_carving_decomposition(object):
     # Cloning S
     Simg = np.copy(S)
 
-    seams = np.empty((self.deleteNumberW + self.deleteNumberH, X.shape[0], X.shape[1]))
+    self.seams = np.empty((self.deleteNumberW + self.deleteNumberH, X.shape[0], X.shape[1]))
     # For each seam I want to merge
     num_seams = self.deleteNumberW + self.deleteNumberH
     for i in xrange(num_seams):
@@ -194,11 +193,10 @@ class video_seam_carving_decomposition(object):
 
       I, pathMap = self.graph_cut(Simg)
 
-      if DEBUG:
-        seams[i] = I
+      self.seams[i] = I
 
       mask = self.makeEdge(pathMap)
       Simg, Z = self.apply_seam_carving(I, mask, Simg, Z)
 
     cli_progress_bar_end()
-    return (Z, seams) if DEBUG else Z
+    return Z

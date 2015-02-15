@@ -70,7 +70,7 @@ while cap.isOpened() and i < frames_count:
   video[i] = X
   i += 1
 
-result, seams = seam_carving(video, deleteNumberW)
+result, seams = seam_carving(video, deleteNumberW, False)
 
 A = print_seams(video, seams)
 A = np.clip(A * 0.8 + video, 0, 255).astype(np.uint8)
