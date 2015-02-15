@@ -9,32 +9,12 @@ import sys
 from seamcarving import seam_carving, progress_bar
 from video_helper import save_video_caps
 from image_helper import local_path
+from utils.seams import print_seams
 
 progress_bar(False)
 
 
-def generate_step(I, img):
-  result = np.empty((img.shape[0], img.shape[1], img.shape[2]))
-  r = np.arange(img.shape[2])
-  for i in xrange(img.shape[0]):
-    result[i] = r > np.vstack(I[i])
-  return result.astype(np.uint64)
-
-def print_seams(result, seams):
-  print "printing seam"
-  seams = seams.astype(np.uint64)
-  A = np.zeros_like(result)
-  correction = np.zeros((result.shape[0], result.shape[1], result.shape[2])).astype(np.uint64)
-  for i in xrange(seams.shape[0]):
-    X, Y = np.mgrid[:result.shape[0], :result.shape[1]]
-    I = seams[i]
-    I = I + correction[X, Y, I]
-    color = np.random.rand(3) * 255
-    A[X, Y, I] = color
-    correction = correction + generate_step(I, result)
-  return A
-
-deleteNumberW = 1
+deleteNumberW = -1
 counting_frames = 10
 filename = '../assets/car.m4v'
 suffix = ''
@@ -72,7 +52,7 @@ while cap.isOpened() and i < frames_count:
 
 result, seams = seam_carving(video, deleteNumberW, False)
 
-A = print_seams(video, seams)
+A = print_seams(video, result, seams, deleteNumberW)
 A = np.clip(A * 0.8 + video, 0, 255).astype(np.uint8)
 
 result = np.clip(result, 0, 255).astype(np.uint8)

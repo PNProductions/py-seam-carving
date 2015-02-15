@@ -185,9 +185,9 @@ class video_seam_carving_decomposition(object):
     # Cloning S
     Simg = np.copy(S)
 
-    self.seams = np.empty((self.deleteNumberW + self.deleteNumberH, X.shape[0], X.shape[1]))
+    num_seams = abs(self.deleteNumberW + self.deleteNumberH)
+    self.seams = np.empty((num_seams, X.shape[0], X.shape[1]))
     # For each seam I want to merge
-    num_seams = self.deleteNumberW + self.deleteNumberH
     for i in xrange(num_seams):
       cli_progress_bar(i, num_seams)
 
